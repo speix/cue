@@ -11,9 +11,8 @@ import (
 
 func main() {
 
-	queue := models.NewQueue("mail", "push")
-
-	models.SpawnWorkers(queue, 2)
+	queue := models.CreateQueue("mail", "push")
+	queue.SpawnWorkers(2)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handlers.RequestHandler(queue, w, r)

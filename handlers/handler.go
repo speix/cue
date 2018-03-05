@@ -4,17 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/speix/cue/models"
 )
 
-var wg sync.WaitGroup
-
 type AddTaskRequestContainer struct {
-	QueueName string `json:"queuename"`
-	TaskName  string `json:"taskname"`
+	QueueName string `json:"queue"`
+	TaskName  string `json:"task"`
 	Delay     int    `json:"delay"`
 }
 
