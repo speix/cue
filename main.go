@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -12,20 +11,12 @@ import (
 
 func main() {
 
-	tasks := make(chan models.Task, 100)
+	queue := models.NewQueue("mail", "push")
 
-	i := 1
-	for i = 1; i <= 20; i++ {
-		go func(i int) {
-			for task := range tasks {
-				task.Process()
-			}
-		}(i)
-	}
-	fmt.Println("Spawned", i, "workers")
+	models.SpawnWorkers(queue, 2)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		handlers.RequestHandler(tasks, w, r)
+		handlers.RequestHandler(queue, w, r)
 	})
 
 	log.Fatal(http.ListenAndServe(":8000", nil))

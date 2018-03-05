@@ -6,19 +6,21 @@ import (
 )
 
 type Task struct {
-	Name  string
-	Delay time.Duration
+	Name   string
+	Delay  time.Duration
+	Result string
 }
 
-func CreateTask(name string, delay time.Duration) Task {
-	return Task{
+func CreateTask(name string, delay time.Duration) *Task {
+	return &Task{
 		Name:  name,
 		Delay: delay,
 	}
 }
 
 func (t *Task) Process() {
-	fmt.Println("Received task:", t.Name)
+	fmt.Println("Processing:", t.Name)
+	fmt.Println("===============================")
 	time.Sleep(t.Delay)
-	fmt.Println("Finished task", t.Name)
+	fmt.Println("Finished:", t.Name)
 }

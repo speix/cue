@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/speix/cue/models"
 )
+
+var wg sync.WaitGroup
 
 type AddTaskRequestContainer struct {
 	QueueName string `json:"queuename"`
@@ -19,7 +22,7 @@ type ServiceResponse struct {
 	Message string `json:"message"`
 }
 
-func RequestHandler(tasks chan models.Task, w http.ResponseWriter, r *http.Request) {
+func RequestHandler(queue *models.Queue, w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	response := ServiceResponse{}
@@ -36,11 +39,9 @@ func RequestHandler(tasks chan models.Task, w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	delay := time.Duration(payload.Delay) * time.Second
-	task := models.CreateTask(payload.TaskName, delay)
+	task := models.CreateTask(payload.TaskName, time.Duration(payload.Delay)*time.Second)
 
-	go func() {
-		fmt.Printf("Added: %s Delay: %s\n", task.Name, task.Delay)
-		tasks <- task
-	}()
+	fmt.Printf("Added: %s Delay: %s\n", task.Name, task.Delay)
+
+	queue.Tasks <- *task
 }
