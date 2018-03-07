@@ -5,13 +5,15 @@ import (
 )
 
 type Task struct {
-	Name  string
-	Delay time.Duration
+	Name    string
+	Payload string
+	Delay   time.Duration
 }
 
-func CreateTask(name string, delay time.Duration) *Task {
+func CreateTask(name, payload string, delay time.Duration) *Task {
 	return &Task{
-		Name:  name,
-		Delay: delay,
+		Name:    name,
+		Payload: payload,
+		Delay:   delay,
 	}
 }

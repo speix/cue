@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,6 +12,7 @@ import (
 type AddTaskRequestContainer struct {
 	QueueName string `json:"queue"`
 	TaskName  string `json:"task"`
+	Payload   string `json:"payload"`
 	Delay     int    `json:"delay"`
 }
 
@@ -24,6 +24,12 @@ type ServiceResponse struct {
 var pool = make(models.Queues)
 
 func init() {
+
+	// TODO: Load available queues from persistent storage.
+	// TODO: validate queues against stored ones.
+	// TODO: valid delay input (is a number in seconds between 1 and 1800.
+	// TODO: extract request validation sequence to a separate method.
+	// TODO: Unit test the code
 
 	fmt.Println("Starting up Pool of Queues")
 	queueEmail := models.CreateQueue("email", "push")
@@ -65,7 +71,29 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(payload.QueueName) == 0 {
 		response.Error = true
-		response.Message = errors.New("queue is empty").Error()
+		response.Message = "Queue is empty"
+		responseJson, _ := json.Marshal(response)
+
+		w.WriteHeader(400)
+		w.Write(responseJson)
+
+		return
+	}
+
+	if len(payload.Payload) == 0 {
+		response.Error = true
+		response.Message = "Payload is empty"
+		responseJson, _ := json.Marshal(response)
+
+		w.WriteHeader(400)
+		w.Write(responseJson)
+
+		return
+	}
+
+	if !IsJSON(payload.Payload) {
+		response.Error = true
+		response.Message = "Payload format is not json"
 		responseJson, _ := json.Marshal(response)
 
 		w.WriteHeader(400)
@@ -76,7 +104,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	if payload.QueueName != "email" && payload.QueueName != "sms" {
 		response.Error = true
-		response.Message = errors.New("unknown queue").Error()
+		response.Message = "Queue not found"
 		responseJson, _ := json.Marshal(response)
 
 		w.WriteHeader(404)
@@ -85,11 +113,16 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := models.CreateTask(payload.TaskName, time.Duration(payload.Delay)*time.Second)
+	task := models.CreateTask(payload.TaskName, payload.Payload, time.Duration(payload.Delay)*time.Second)
 
 	fmt.Println("Received", task.Name, "with delay", task.Delay)
 
 	pool[payload.QueueName].Tasks <- *task
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func IsJSON(str string) bool {
+	var js json.RawMessage
+	return json.Unmarshal([]byte(str), &js) == nil
 }
