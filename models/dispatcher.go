@@ -22,9 +22,12 @@ func CreateDispatcher(nWorkers int) *Dispatcher {
 }
 
 func (d *Dispatcher) Start(queue *Queue) {
+
+	fmt.Println("Workers assignment for Queue:", queue.Name)
+
 	for i := 1; i <= d.nWorkers; i++ {
-		fmt.Println("Queue:", queue.Name, "spawned worker", i)
-		worker := CreateWorker(d.WorkerPool)
+		worker := CreateWorker(d.WorkerPool, queue)
+		fmt.Println("Spawned worker", worker.ID)
 		worker.Start()
 	}
 
@@ -54,6 +57,7 @@ func (d *Dispatcher) Listen() {
 	// Listen for results in results channel
 	go func() {
 		for result := range results {
+			// Log the results in file or db
 			fmt.Println(result.message)
 		}
 	}()

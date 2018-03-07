@@ -1,20 +1,33 @@
 package models
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
+
+	"github.com/twinj/uuid"
 )
 
+type responseBody struct {
+	Message string
+}
+
 type Worker struct {
+	ID            uuid.Uuid
 	WorkerPool    chan chan Task
 	WorkerChannel chan Task
+	queue         *Queue
 	quit          chan bool
 }
 
-func CreateWorker(workerPool chan chan Task) *Worker {
+func CreateWorker(workerPool chan chan Task, queue *Queue) *Worker {
 	return &Worker{
+		ID:            uuid.NewV4(),
 		WorkerPool:    workerPool,
 		WorkerChannel: make(chan Task),
+		queue:         queue,
 		quit:          make(chan bool),
 	}
 }
@@ -31,12 +44,42 @@ func (w Worker) Start() {
 			select {
 
 			case task := <-w.WorkerChannel:
+
 				// received a work request, do some work
-				fmt.Println("Pulled", task.Name)
+				fmt.Println("Pulled", task.Name, "by worker", w.ID)
 				time.Sleep(task.Delay)
 
+				client := &http.Client{}
+				url := "www.supccccergramm.com"
+				request, err := http.NewRequest("POST", url, nil)
+				request.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("Mia fora ki enan kairo")))
+
+				if err != nil {
+					results <- Result{task: &task, message: "Failed to prepare request: " + err.Error()}
+					break
+				}
+
+				response, err := client.Do(request)
+				if err != nil {
+					results <- Result{task: &task, message: "Failed to execute request: " + err.Error()}
+					break
+				}
+
+				if response.StatusCode != 200 {
+					body := &responseBody{}
+					err = json.NewDecoder(response.Body).Decode(&body)
+
+					if err != nil {
+						results <- Result{task: &task, message: body.Message}
+						break
+					}
+
+					results <- Result{task: &task, message: "Unable to connect: " + response.Status}
+					break
+				}
+
 				// give back the response to the results channel
-				results <- Result{task: &task, message: "Finished processing: " + task.Name}
+				results <- Result{task: &task, message: "Finished processing: " + task.Name + " response " + response.Status}
 
 			case <-w.quit:
 				fmt.Println("quitting the channel")

@@ -1,9 +1,10 @@
 package models
 
 type Queue struct {
-	Name  string
-	Mode  string
-	Tasks chan Task
+	Name        string
+	Mode        string
+	Subscribers Endpoints
+	Tasks       chan Task
 }
 
 type Queues map[string]*Queue

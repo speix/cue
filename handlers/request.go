@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"net/http"
 	"time"
@@ -22,10 +21,6 @@ type ServiceResponse struct {
 	Message string `json:"message"`
 }
 
-var (
-	nWorkers = flag.Int("max_workers", 1, "Number of workers to start")
-)
-
 var pool = make(models.Queues)
 
 func init() {
@@ -40,14 +35,14 @@ func init() {
 
 	fmt.Println("Dispatching workers to each queue")
 
-	dispatcherEmail := models.CreateDispatcher(*nWorkers)
-	dispatcherSms := models.CreateDispatcher(*nWorkers)
+	dispatcherEmail := models.CreateDispatcher(1)
+	//dispatcherSms := models.CreateDispatcher(10)
 
 	dispatcherEmail.Start(pool["email"])
-	dispatcherSms.Start(pool["sms"])
+	//dispatcherSms.Start(pool["sms"])
 
 	dispatcherEmail.Listen()
-	dispatcherSms.Listen()
+	//dispatcherSms.Listen()
 }
 
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
@@ -90,7 +85,7 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := models.CreateTask(payload.TaskName, time.Duration(payload.Delay)*time.Second, payload.QueueName)
+	task := models.CreateTask(payload.TaskName, time.Duration(payload.Delay)*time.Second)
 
 	fmt.Println("Received", task.Name, "with delay", task.Delay)
 
