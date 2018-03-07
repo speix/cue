@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -52,7 +51,7 @@ func (w Worker) Start() {
 				client := &http.Client{}
 				url := "www.supccccergramm.com"
 				request, err := http.NewRequest("POST", url, nil)
-				request.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("Mia fora ki enan kairo")))
+				request.Header.Add("Authorization", "Basic test")
 
 				if err != nil {
 					results <- Result{task: &task, message: "Failed to prepare request: " + err.Error()}
