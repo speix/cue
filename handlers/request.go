@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/speix/cue/models"
@@ -36,7 +35,7 @@ func init() {
 	// TODO: extract request validation sequence to a separate method.
 	// TODO: Unit test the code
 
-	db, err := models.NewDB("host=192.168.10.70 user=et_psql password= dbname=etable sslmode=disable")
+	db, err := models.NewDB("host=192.168.10.70 user=et_psql password=#Et@bl3^&^# dbname=etable sslmode=disable")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -49,7 +48,6 @@ func init() {
 	}
 
 	fmt.Println(queues)
-	os.Exit(0)
 	/*fmt.Println("Starting up Pool of Queues")
 	queueEmail := models.CreateQueue("email", "push")
 	queueSms := models.CreateQueue("sms", "push")
