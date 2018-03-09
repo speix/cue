@@ -3,6 +3,7 @@ package models
 type Queue struct {
 	Name        string
 	Mode        string
+	Workers     int
 	Subscribers Endpoints
 	Tasks       chan Task
 }
@@ -14,16 +15,17 @@ func (pool Queues) Add(reference string, queue *Queue) Queues {
 	return pool
 }
 
-func CreateQueue(name string, mode string) *Queue {
+func CreateQueue(name, mode string, workers int) *Queue {
 	return &Queue{
-		Name:  name,
-		Mode:  mode,
-		Tasks: make(chan Task, 100),
+		Name:    name,
+		Mode:    mode,
+		Workers: workers,
+		Tasks:   make(chan Task, 100),
 	}
 }
 
 func (db *DB) GetQueues() ([]*Queue, error) {
-	rows, err := db.Query("select q.name, q.mode from queue q")
+	rows, err := db.Query("select q.name, q.mode, q.workers from queue q")
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +35,7 @@ func (db *DB) GetQueues() ([]*Queue, error) {
 	for rows.Next() {
 
 		q := new(Queue)
-		err := rows.Scan(&q.Name, &q.Mode)
+		err := rows.Scan(&q.Name, &q.Mode, &q.Workers)
 		if err != nil {
 			return nil, err
 		}
