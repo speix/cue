@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/speix/cue/models"
@@ -29,27 +30,29 @@ var pool = make(models.Queues)
 
 func init() {
 
-	// TODO: validate queues against stored ones.
 	// TODO: valid delay input (is a number in seconds between 1 and 1800.
 	// TODO: extract request validation sequence to a separate method.
 	// TODO: Unit test the code
 
-	db, err := models.NewDB("host=192.168.10.70 user=et_psql password= dbname=etable sslmode=disable")
+	dataSource := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("CUE_DB_HOST"), os.Getenv("CUE_DB_USER"), os.Getenv("CUE_DB_PASS"), os.Getenv("CUE_DB_NAME"))
+
+	db, err := models.NewDB(dataSource)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	env := &Env{db}
 
-	queues, err := env.db.GetQueues()
+	dbQueues, err := env.db.GetQueues()
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	for i := range queues {
+	for i := range dbQueues {
 
-		fmt.Println("Creating queue:", queues[i].Name)
-		queue := models.CreateQueue(queues[i].Name, queues[i].Mode, queues[i].Workers)
+		fmt.Println("Creating queue:", dbQueues[i].Name)
+		queue := models.CreateQueue(dbQueues[i].Name, dbQueues[i].Mode, dbQueues[i].Workers)
 
 		fmt.Println("Adding", queue.Name, "queue to the Pool of queues")
 		pool.Add(queue.Name, queue)
