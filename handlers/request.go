@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/speix/cue/models"
@@ -21,6 +22,10 @@ type ServiceResponse struct {
 	Message string `json:"message"`
 }
 
+type Env struct {
+	db models.Storage
+}
+
 var pool = make(models.Queues)
 
 func init() {
@@ -31,7 +36,21 @@ func init() {
 	// TODO: extract request validation sequence to a separate method.
 	// TODO: Unit test the code
 
-	fmt.Println("Starting up Pool of Queues")
+	db, err := models.NewDB("host=192.168.10.70 user=et_psql password= dbname=etable sslmode=disable")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	env := &Env{db}
+
+	queues, err := env.db.GetQueues()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(queues)
+	os.Exit(0)
+	/*fmt.Println("Starting up Pool of Queues")
 	queueEmail := models.CreateQueue("email", "push")
 	queueSms := models.CreateQueue("sms", "push")
 
@@ -42,13 +61,13 @@ func init() {
 	fmt.Println("Dispatching workers to each queue")
 
 	dispatcherEmail := models.CreateDispatcher(1)
-	//dispatcherSms := models.CreateDispatcher(10)
+	dispatcherSms := models.CreateDispatcher(10)
 
 	dispatcherEmail.Start(pool["email"])
-	//dispatcherSms.Start(pool["sms"])
+	dispatcherSms.Start(pool["sms"])
 
 	dispatcherEmail.Listen()
-	//dispatcherSms.Listen()
+	dispatcherSms.Listen()*/
 }
 
 func RequestHandler(w http.ResponseWriter, r *http.Request) {
