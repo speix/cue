@@ -49,8 +49,7 @@ func (w Worker) Start() {
 				time.Sleep(task.Delay)
 
 				client := &http.Client{}
-				url := "www.supccccergramm.com"
-				request, err := http.NewRequest("POST", url, nil)
+				request, err := http.NewRequest("POST", w.queue.Url, task.Payload)
 				request.Header.Add("Authorization", "Basic test")
 
 				if err != nil {

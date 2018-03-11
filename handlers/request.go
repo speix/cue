@@ -32,6 +32,7 @@ func init() {
 
 	// TODO: valid delay input (is a number in seconds between 1 and 1800.
 	// TODO: extract request validation sequence to a separate method.
+	// TODO: introduce number of retries on each queue
 	// TODO: Unit test the code
 
 	dataSource := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -52,7 +53,7 @@ func init() {
 	for i := range dbQueues {
 
 		fmt.Println("Creating queue:", dbQueues[i].Name)
-		queue := models.CreateQueue(dbQueues[i].Name, dbQueues[i].Mode, dbQueues[i].Workers)
+		queue := models.CreateQueue(dbQueues[i].Name, dbQueues[i].Mode, dbQueues[i].Url, dbQueues[i].Headers, dbQueues[i].Workers)
 
 		fmt.Println("Adding", queue.Name, "queue to the Pool of queues")
 		pool.Add(queue.Name, queue)
