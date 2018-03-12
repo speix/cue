@@ -1,7 +1,7 @@
 package models
 
 import (
-	"database/sql"
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 )
@@ -11,15 +11,12 @@ type Storage interface {
 }
 
 type DB struct {
-	*sql.DB
+	*sqlx.DB
 }
 
 func NewDB(dataSource string) (*DB, error) {
-	db, err := sql.Open("postgres", dataSource)
+	db, err := sqlx.Connect("postgres", dataSource)
 	if err != nil {
-		return nil, err
-	}
-	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 

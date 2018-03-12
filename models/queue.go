@@ -5,13 +5,12 @@ import (
 )
 
 type Queue struct {
-	QueueID   int
-	Name      string
-	Mode      string
-	Workers   int
-	Endpoints []Endpoint
-	Headers   string
-	Tasks     chan Task
+	QueueID  int `db:"queue_id"`
+	Name     string
+	Mode     string
+	Workers  int
+	Endpoint Endpoint
+	Tasks    chan Task
 }
 
 type Queues map[string]*Queue
@@ -21,41 +20,43 @@ func (pool Queues) Add(reference string, queue *Queue) Queues {
 	return pool
 }
 
-func CreateQueue(name, mode, headers string, workers int) *Queue {
+func CreateQueue(queue *Queue) *Queue {
 	return &Queue{
-		Name:    name,
-		Mode:    mode,
-		Workers: workers,
-		Headers: headers,
-		Tasks:   make(chan Task, 100),
+		Name:     queue.Name,
+		Mode:     queue.Mode,
+		Workers:  queue.Workers,
+		Endpoint: queue.Endpoint,
+		Tasks:    make(chan Task, 100),
 	}
 }
 
 func (db *DB) GetQueues() ([]*Queue, error) {
 
-	sql := "select q.queue_id, q.name, q.mode, q.workers from queue q"
-
-	rows, err := db.Query(sql)
+	queues := make([]*Queue, 0)
+	err := db.Select(&queues, "select * from queue")
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	queues := make([]*Queue, 0)
-	for rows.Next() {
+	for q := range queues {
 
-		q := new(Queue)
-		err := rows.Scan(&q.QueueID, &q.Name, &q.Mode, &q.Workers)
+		endpoint := Endpoint{}
+		err = db.Get(&endpoint, "select queue_endpoint_id, url from queue_endpoint where queue_id=$1", queues[q].QueueID)
 		if err != nil {
 			return nil, err
 		}
 
-		queues = append(queues, q)
+		headers := make([]Header, 0)
+		err = db.Select(&headers, "select key, value from queue_endpoint_header where queue_endpoint_id=$1", endpoint.EndpointID)
+		if err != nil {
+			return nil, err
+		}
+
+		endpoint.Headers = headers
+		queues[q].Endpoint = endpoint
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
+	defer db.Close()
 
 	if len(queues) == 0 {
 		return nil, errors.New("No queues found in database ")
