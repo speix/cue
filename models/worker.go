@@ -1,6 +1,7 @@
 package models
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -48,9 +49,19 @@ func (w Worker) Start() {
 				fmt.Println("Pulled", task.Name, "by worker", w.ID)
 				time.Sleep(task.Delay)
 
-				client := &http.Client{}
-				request, err := http.NewRequest("POST", w.queue.Url, task.Payload)
-				request.Header.Add("Authorization", "Basic test")
+				client := &http.Client{
+					Transport: &http.Transport{
+						TLSClientConfig: &tls.Config{
+							InsecureSkipVerify: true,
+						},
+					},
+				}
+
+				request, err := http.NewRequest("POST", "", task.Payload)
+
+				for h := range w.queue.Headers {
+					fmt.Println(h)
+				}
 
 				if err != nil {
 					results <- Result{task: &task, message: "Failed to prepare request: " + err.Error()}

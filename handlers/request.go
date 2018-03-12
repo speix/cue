@@ -53,7 +53,7 @@ func init() {
 	for i := range dbQueues {
 
 		fmt.Println("Creating queue:", dbQueues[i].Name)
-		queue := models.CreateQueue(dbQueues[i].Name, dbQueues[i].Mode, dbQueues[i].Url, dbQueues[i].Headers, dbQueues[i].Workers)
+		queue := models.CreateQueue(dbQueues[i].Name, dbQueues[i].Mode, dbQueues[i].Headers, dbQueues[i].Workers)
 
 		fmt.Println("Adding", queue.Name, "queue to the Pool of queues")
 		pool.Add(queue.Name, queue)

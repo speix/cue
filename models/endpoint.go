@@ -1,15 +1,12 @@
 package models
 
 type Endpoint struct {
-	Url     string
-	Headers Headers
+	EndpointID int
+	Url        string
+	Headers    []Header
 }
-
-type Endpoints []Endpoint
 
 type Header struct {
 	Key   string
 	Value string
 }
-
-type Headers []Header

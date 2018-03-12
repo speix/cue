@@ -5,12 +5,13 @@ import (
 )
 
 type Queue struct {
-	Name    string
-	Mode    string
-	Workers int
-	Url     string
-	Headers string
-	Tasks   chan Task
+	QueueID   int
+	Name      string
+	Mode      string
+	Workers   int
+	Endpoints []Endpoint
+	Headers   string
+	Tasks     chan Task
 }
 
 type Queues map[string]*Queue
@@ -20,12 +21,11 @@ func (pool Queues) Add(reference string, queue *Queue) Queues {
 	return pool
 }
 
-func CreateQueue(name, mode, url, headers string, workers int) *Queue {
+func CreateQueue(name, mode, headers string, workers int) *Queue {
 	return &Queue{
 		Name:    name,
 		Mode:    mode,
 		Workers: workers,
-		Url:     url,
 		Headers: headers,
 		Tasks:   make(chan Task, 100),
 	}
@@ -33,21 +33,7 @@ func CreateQueue(name, mode, url, headers string, workers int) *Queue {
 
 func (db *DB) GetQueues() ([]*Queue, error) {
 
-	sql := `select
-				q.name,
-				q.mode,
-				q.workers,
-				qe.url,
-				jsonb_agg(
-					jsonb_build_object(
-						'key', qeh.key,
-						'value', qeh.value
-					)
-				) as headers
-			from queue q
-				inner join queue_endpoint qe on qe.queue_id = q.queue_id
-				inner join queue_endpoint_header qeh on qeh.queue_endpoint_id = qe.queue_endpoint_id
-			group by q.name, q.mode, q.workers, qe.url`
+	sql := "select q.queue_id, q.name, q.mode, q.workers from queue q"
 
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -59,7 +45,7 @@ func (db *DB) GetQueues() ([]*Queue, error) {
 	for rows.Next() {
 
 		q := new(Queue)
-		err := rows.Scan(&q.Name, &q.Mode, &q.Workers, &q.Url, &q.Headers)
+		err := rows.Scan(&q.QueueID, &q.Name, &q.Mode, &q.Workers)
 		if err != nil {
 			return nil, err
 		}
