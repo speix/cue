@@ -11,10 +11,10 @@ type Task struct {
 	Delay   time.Duration
 }
 
-func CreateTask(name, payload string, delay time.Duration) *Task {
+func CreateTask(name, content string, delay time.Duration) *Task {
 	return &Task{
 		Name:    name,
-		Payload: bytes.NewBufferString(payload),
+		Payload: bytes.NewBufferString(content),
 		Delay:   delay,
 	}
 }

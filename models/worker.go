@@ -58,13 +58,13 @@ func (w Worker) Start() {
 				}
 
 				request, err := http.NewRequest("POST", w.queue.Endpoint.Url, task.Payload)
-				for h := range w.queue.Endpoint.Headers {
-					request.Header.Add(w.queue.Endpoint.Headers[h].Key, w.queue.Endpoint.Headers[h].Value)
-				}
-
 				if err != nil {
 					results <- Result{task: &task, message: "Failed to prepare request: " + err.Error()}
 					break
+				}
+
+				for h := range w.queue.Endpoint.Headers {
+					request.Header.Add(w.queue.Endpoint.Headers[h].Key, w.queue.Endpoint.Headers[h].Value)
 				}
 
 				response, err := client.Do(request)
