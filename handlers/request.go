@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -35,24 +36,21 @@ func (h TaskRequestHandler) StartCue() {
 
 	env := &Env{db}
 
-	dbQueues, err := env.db.GetQueues()
+	queues, err := env.db.CreateQueues()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
 
-	for i := range dbQueues {
+	for i := range queues {
 
-		fmt.Println("Creating queue:", dbQueues[i].Name)
-		queue := models.CreateQueue(dbQueues[i])
+		fmt.Println("Adding", queues[i].Name, "queue to the Pool of queues")
+		h.Pool.Add(queues[i])
 
-		fmt.Println("Adding", queue.Name, "queue to the Pool of queues")
-		h.Pool.Add(queue.Name, queue)
-
-		fmt.Printf("Creating dispatcher with %v workers\n", queue.Workers)
-		dispatcher := models.CreateDispatcher(queue.Workers)
+		fmt.Printf("Creating dispatcher with %v workers\n", queues[i].Workers)
+		dispatcher := models.CreateDispatcher(queues[i].Workers)
 
 		fmt.Println("Starting the dispatcher")
-		dispatcher.Start(queue)
+		dispatcher.Start(queues[i])
 		dispatcher.Listen()
 	}
 

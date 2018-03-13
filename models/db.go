@@ -7,7 +7,7 @@ import (
 )
 
 type Storage interface {
-	GetQueues() ([]*Queue, error)
+	CreateQueues() ([]*Queue, error)
 }
 
 type DB struct {

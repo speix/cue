@@ -47,9 +47,11 @@ func (w Worker) Start() {
 
 				// received a work request, do some work
 				fmt.Println("Pulled", task.Name, "by worker", w.ID)
+
 				time.Sleep(task.Delay)
 
 				client := &http.Client{
+					Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Second),
 					Transport: &http.Transport{
 						TLSClientConfig: &tls.Config{
 							InsecureSkipVerify: true,
@@ -74,11 +76,12 @@ func (w Worker) Start() {
 				}
 
 				if response.StatusCode != 200 {
-					body := &responseBody{}
-					err = json.NewDecoder(response.Body).Decode(&body)
 
+					body := &responseBody{}
+
+					err = json.NewDecoder(response.Body).Decode(&body)
 					if err != nil {
-						results <- Result{task: &task, message: body.Message}
+						results <- Result{task: &task, message: "Response error: " + response.Status + " " + body.Message}
 						break
 					}
 

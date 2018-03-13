@@ -8,6 +8,7 @@ type Dispatcher struct {
 }
 
 type Result struct {
+	Error   error
 	task    *Task
 	message string
 }
@@ -54,11 +55,22 @@ func (d *Dispatcher) dispatch(queue *Queue) {
 }
 
 func (d *Dispatcher) Listen() {
+
 	// Listen for results in results channel
 	go func() {
 		for result := range results {
+
 			// Log the results in file or db
 			fmt.Println(result.message)
+
+			if result.Error != nil {
+
+				//Re-queue task with no delay for number of retries set in queue
+				result.task.Delay = 0
+
+			}
+
 		}
 	}()
+
 }
