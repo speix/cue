@@ -60,18 +60,6 @@ func (h TaskRequestHandler) StartCue() {
 
 func (h TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	/*// check if pool of queues contains the requested QueueName
-	if _, ok := pool[payload.QueueName]; !ok {
-		response.Error = true
-		response.Message = "Queue " + payload.QueueName + " not found"
-		responseJson, _ := json.Marshal(response)
-
-		w.WriteHeader(404)
-		w.Write(responseJson)
-
-		return
-	}*/
-
 	task := models.CreateTask(h.Payload.TaskName, h.Payload.Content, time.Duration(h.Payload.Delay)*time.Second)
 
 	fmt.Println("Received", task.Name, "with delay", task.Delay)
