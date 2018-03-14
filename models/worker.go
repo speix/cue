@@ -3,6 +3,7 @@ package models
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -46,12 +47,14 @@ func (w Worker) Start() {
 			case task := <-w.WorkerChannel:
 
 				// received a work request, do some work
-				fmt.Println("Pulled", task.Name, "by worker", w.ID)
+				fmt.Println("Pulled", task.Name, "by worker", w.ID, "with delay", task.Delay)
 
 				time.Sleep(task.Delay)
 
+				result := Result{task: &task, worker: &w}
+
 				client := &http.Client{
-					Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Second),
+					Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Nanosecond),
 					Transport: &http.Transport{
 						TLSClientConfig: &tls.Config{
 							InsecureSkipVerify: true,
@@ -61,7 +64,9 @@ func (w Worker) Start() {
 
 				request, err := http.NewRequest("POST", w.queue.Endpoint.Url, task.Payload)
 				if err != nil {
-					results <- Result{task: &task, message: "Failed to prepare request: " + err.Error()}
+					result.Error = err
+					result.message = "Failed to prepare request: " + err.Error()
+					results <- result
 					break
 				}
 
@@ -71,7 +76,9 @@ func (w Worker) Start() {
 
 				response, err := client.Do(request)
 				if err != nil {
-					results <- Result{task: &task, message: "Failed to execute request: " + err.Error()}
+					result.Error = err
+					result.message = "Failed to execute request: " + err.Error()
+					results <- result
 					break
 				}
 
@@ -81,16 +88,20 @@ func (w Worker) Start() {
 
 					err = json.NewDecoder(response.Body).Decode(&body)
 					if err != nil {
-						results <- Result{task: &task, message: "Response error: " + response.Status + " " + body.Message}
+						result.Error = err
+						result.message = "Response error: " + response.Status + " " + body.Message
+						results <- result
 						break
 					}
 
-					results <- Result{task: &task, message: "Unable to connect: " + response.Status}
+					result.Error = errors.New("")
+					result.message = "Unable to connect: " + response.Status
+					results <- result
 					break
 				}
 
-				// give back the response to the results channel
-				results <- Result{task: &task, message: "Finished processing: " + task.Name + " response " + response.Status}
+				result.message = "Finished processing: " + task.Name + " response " + response.Status
+				results <- result
 
 			case <-w.quit:
 				fmt.Println("quitting the channel")

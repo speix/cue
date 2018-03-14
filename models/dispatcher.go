@@ -1,15 +1,23 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Dispatcher struct {
 	WorkerPool chan chan Task // pool of worker's channels that are registered with the dispatcher
 	nWorkers   int            // number of worker for each pool
 }
 
+const (
+	retryDelay = 5 * time.Second
+)
+
 type Result struct {
 	Error   error
 	task    *Task
+	worker  *Worker
 	message string
 }
 
@@ -60,13 +68,23 @@ func (d *Dispatcher) Listen() {
 	go func() {
 		for result := range results {
 
-			// Log the results in file or db
+			fmt.Println("Finished", result.task.Name)
 			fmt.Println(result.message)
 
 			if result.Error != nil {
 
-				//Re-queue task with no delay for number of retries set in queue
-				result.task.Delay = 0
+				endpointRetries := result.worker.queue.Endpoint.Retries
+				taskRetries := result.task.Retries
+
+				if endpointRetries != 0 && endpointRetries != taskRetries { // Retry working the task
+
+					result.task.Delay = retryDelay // Set up retry delay
+
+					result.task.Retries += 1
+
+					result.worker.queue.Tasks <- *result.task // Send the task back to the queue for pick up
+
+				}
 
 			}
 

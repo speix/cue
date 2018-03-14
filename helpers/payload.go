@@ -37,7 +37,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request, pool models.Q
 		return errors.New("")
 	}
 
-	// check if there is a QueueName request attribute
+	// check if there is a QueueName request
 	if len(p.QueueName) == 0 {
 		response.Error = true
 		response.Message = "Queue is not set"
@@ -49,7 +49,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request, pool models.Q
 		return errors.New("")
 	}
 
-	// check if there is a Payload request attribute
+	// check if there is a Payload request
 	if len(p.Content) == 0 {
 		response.Error = true
 		response.Message = "Payload is not set"

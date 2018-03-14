@@ -20,21 +20,10 @@ func (pool Queues) Add(queue *Queue) Queues {
 	return pool
 }
 
-func (queue *Queue) Create() *Queue {
-	queue.Tasks = make(chan Task, 100)
-	return queue
-	/*return &Queue{
-		Name:     queue.Name,
-		Mode:     queue.Mode,
-		Workers:  queue.Workers,
-		Endpoint: queue.Endpoint,
-		Tasks:    make(chan Task, 100),
-	}*/
-}
-
 func (db *DB) CreateQueues() ([]*Queue, error) {
 
 	queues := make([]*Queue, 0)
+
 	err := db.Select(&queues, "select * from queue")
 	if err != nil {
 		return nil, err

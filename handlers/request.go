@@ -23,7 +23,6 @@ type TaskRequestHandler struct {
 
 func (h TaskRequestHandler) StartCue() {
 
-	// TODO: introduce number of retries on each queue
 	// TODO: Unit test the code
 
 	dataSource := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
