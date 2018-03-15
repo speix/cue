@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/speix/cue/models"
 
@@ -29,7 +30,7 @@ func main() {
 	request.StartCue()
 
 	server := &http.Server{
-		Addr: ":8000",
+		Addr: ":" + os.Getenv("CUE_SERVER_PORT"),
 	}
 
 	// handle request on selected path but first function-chain the validation of each task request

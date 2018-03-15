@@ -23,8 +23,6 @@ type TaskRequestHandler struct {
 
 func (h TaskRequestHandler) StartCue() {
 
-	// TODO: Unit test the code
-
 	dataSource := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("CUE_DB_HOST"), os.Getenv("CUE_DB_USER"), os.Getenv("CUE_DB_PASS"), os.Getenv("CUE_DB_NAME"))
 
@@ -42,13 +40,12 @@ func (h TaskRequestHandler) StartCue() {
 
 	for i := range queues {
 
-		fmt.Println("Adding", queues[i].Name, "queue to the Pool of queues")
 		h.Pool.Add(queues[i])
 
-		fmt.Printf("Creating dispatcher with %v workers\n", queues[i].Workers)
 		dispatcher := models.CreateDispatcher(queues[i].Workers)
 
 		fmt.Println("Starting the dispatcher")
+
 		dispatcher.Start(queues[i])
 		dispatcher.Listen()
 	}

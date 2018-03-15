@@ -54,7 +54,7 @@ func (w Worker) Start() {
 				result := Result{task: &task, worker: &w}
 
 				client := &http.Client{
-					Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Nanosecond),
+					Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Second),
 					Transport: &http.Transport{
 						TLSClientConfig: &tls.Config{
 							InsecureSkipVerify: true,
