@@ -2,6 +2,7 @@ package models
 
 import (
 	"bytes"
+	"encoding/json"
 	"time"
 )
 
@@ -12,10 +13,11 @@ type Task struct {
 	Retries int
 }
 
-func CreateTask(name, content string, delay time.Duration) *Task {
+func CreateTask(name string, payload json.RawMessage, delay time.Duration) *Task {
+
 	return &Task{
 		Name:    name,
-		Payload: bytes.NewBufferString(content),
+		Payload: bytes.NewBufferString(string(payload)),
 		Delay:   delay,
 		Retries: 0,
 	}

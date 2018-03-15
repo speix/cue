@@ -54,7 +54,7 @@ func (h TaskRequestHandler) StartCue() {
 
 func (h TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	task := models.CreateTask(h.Payload.TaskName, h.Payload.Content, time.Duration(h.Payload.Delay)*time.Second)
+	task := models.CreateTask(h.Payload.TaskName, h.Payload.Payload, time.Duration(h.Payload.Delay)*time.Second)
 
 	fmt.Println("Received", task.Name, "with delay", task.Delay)
 

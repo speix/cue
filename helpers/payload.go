@@ -9,10 +9,10 @@ import (
 )
 
 type Payload struct {
-	QueueName string `json:"queue"`
-	TaskName  string `json:"task"`
-	Content   string `json:"payload"`
-	Delay     int    `json:"delay"`
+	QueueName string          `json:"queue"`
+	TaskName  string          `json:"task"`
+	Payload   json.RawMessage `json:"payload"`
+	Delay     int             `json:"delay"`
 }
 
 type ServiceResponse struct {
@@ -50,7 +50,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request, pool models.Q
 	}
 
 	// check if there is a Payload request
-	if len(p.Content) == 0 {
+	if len(p.Payload) == 0 {
 		response.Error = true
 		response.Message = "Payload is not set"
 		responseJson, _ := json.Marshal(response)
@@ -75,7 +75,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request, pool models.Q
 	}
 
 	// check if payload attribute is a json field
-	if !isJSON(p.Content) {
+	if !isJSON(p.Payload) {
 		response.Error = true
 		response.Message = "Payload format is not json"
 		responseJson, _ := json.Marshal(response)
@@ -109,8 +109,8 @@ func inBetween(number, min, max int) bool {
 	return false
 }
 
-func isJSON(str string) bool {
+func isJSON(str json.RawMessage) bool {
 	var js json.RawMessage
 
-	return json.Unmarshal([]byte(str), &js) == nil
+	return json.Unmarshal([]byte(string(str)), &js) == nil
 }
