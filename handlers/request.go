@@ -38,15 +38,18 @@ func (h TaskRequestHandler) StartCue() {
 		log.Fatal(err)
 	}
 
+	h.Payload.QMapper = make(map[string]bool)
+
 	for i := range queues {
 
 		h.Pool.Add(queues[i])
 
+		h.Payload.QMapper[queues[i].Name] = true // Add available queue names to the Payload as reference
+
 		dispatcher := models.CreateDispatcher(queues[i].Workers)
 
-		fmt.Println("Starting the dispatcher")
-
 		dispatcher.Start(queues[i])
+
 		dispatcher.Listen()
 	}
 

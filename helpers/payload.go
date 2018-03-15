@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-
-	"github.com/speix/cue/models"
 )
 
 type Payload struct {
@@ -13,6 +11,7 @@ type Payload struct {
 	TaskName  string          `json:"task"`
 	Payload   json.RawMessage `json:"payload"`
 	Delay     int             `json:"delay"`
+	QMapper   map[string]bool
 }
 
 type ServiceResponse struct {
@@ -20,7 +19,7 @@ type ServiceResponse struct {
 	Message string `json:"message"`
 }
 
-func (p *Payload) Validate(w http.ResponseWriter, r *http.Request, pool models.Queues) error {
+func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "application/json")
 	response := ServiceResponse{}
@@ -86,7 +85,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request, pool models.Q
 		return errors.New("")
 	}
 
-	if _, ok := pool[p.QueueName]; !ok {
+	if !p.QMapper[p.QueueName] {
 		response.Error = true
 		response.Message = "Queue " + p.QueueName + " not found"
 		responseJson, _ := json.Marshal(response)
