@@ -62,7 +62,7 @@ func (w Worker) Start() {
 					},
 				}
 
-				request, err := http.NewRequest("POST", w.queue.Endpoint.Url, task.Payload)
+				request, err := http.NewRequest(w.queue.Endpoint.Method, w.queue.Endpoint.Url, task.Payload)
 				if err != nil {
 					result.Error = err
 					result.message = "Failed to prepare request: " + err.Error()

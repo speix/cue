@@ -13,9 +13,9 @@ type Queue struct {
 	Tasks    chan Task
 }
 
-type Queues map[string]*Queue
+type QueuesPool map[string]*Queue
 
-func (pool Queues) Add(queue *Queue) Queues {
+func (pool QueuesPool) Add(queue *Queue) QueuesPool {
 	pool[queue.Name] = queue
 	return pool
 }
@@ -32,7 +32,7 @@ func (db *DB) CreateQueues() ([]*Queue, error) {
 	for q := range queues {
 
 		endpoint := Endpoint{}
-		err = db.Get(&endpoint, "select queue_endpoint_id, url, timeout, retries from queue_endpoint where queue_id=$1", queues[q].QueueID)
+		err = db.Get(&endpoint, "select queue_endpoint_id, url, timeout, retries, method from queue_endpoint where queue_id=$1", queues[q].QueueID)
 		if err != nil {
 			return nil, err
 		}

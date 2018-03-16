@@ -5,10 +5,11 @@ import "time"
 type Endpoint struct {
 	EndpointID int `db:"queue_endpoint_id"`
 	QueueID    int
-	Url        string
-	Timeout    time.Duration
-	Retries    int
-	Headers    []Header
+	Url        string        // Request URL
+	Timeout    time.Duration // Request Timeout
+	Retries    int           // Number of retries on a failed request
+	Method     string        // HTTP Method to be used for the request
+	Headers    []Header      // Extra HTTP Headers for the request
 }
 
 type Header struct {

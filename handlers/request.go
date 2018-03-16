@@ -18,10 +18,48 @@ type Env struct {
 
 type TaskRequestHandler struct {
 	Payload *helpers.Payload
-	Pool    models.Queues
+	Pool    models.QueuesPool
 }
 
-func (h TaskRequestHandler) StartCue() {
+func StartCue() *TaskRequestHandler {
+
+	queues := loadQueues() // Load queues from database
+
+	handler := &TaskRequestHandler{
+		Payload: &helpers.Payload{
+			QMapper: make(map[string]bool),
+		},
+		Pool: models.QueuesPool{},
+	}
+
+	for i := range queues {
+
+		handler.Pool.Add(queues[i]) // Add queue to the pool of queues
+
+		handler.Payload.QMap(queues[i].Name) // Add available queue names to the Payload as reference
+
+		dispatcher := models.CreateDispatcher(queues[i].Workers) // Create a dispatcher for each queue
+
+		dispatcher.Start(queues[i]) // Start workers running on each queue
+
+		dispatcher.Listen() // Listen for tasks
+	}
+
+	return handler
+}
+
+func (h *TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	task := models.CreateTask(h.Payload.TaskName, h.Payload.Payload, time.Duration(h.Payload.Delay)*time.Second)
+
+	fmt.Println("Received", task.Name, "with delay", task.Delay)
+
+	h.Pool[h.Payload.QueueName].Tasks <- *task
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func loadQueues() []*models.Queue {
 
 	dataSource := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("CUE_DB_HOST"), os.Getenv("CUE_DB_USER"), os.Getenv("CUE_DB_PASS"), os.Getenv("CUE_DB_NAME"))
@@ -38,30 +76,5 @@ func (h TaskRequestHandler) StartCue() {
 		log.Fatal(err)
 	}
 
-	h.Payload.QMapper = make(map[string]bool)
-
-	for i := range queues {
-
-		h.Pool.Add(queues[i])
-
-		h.Payload.QMapper[queues[i].Name] = true // Add available queue names to the Payload as reference
-
-		dispatcher := models.CreateDispatcher(queues[i].Workers)
-
-		dispatcher.Start(queues[i])
-
-		dispatcher.Listen()
-	}
-
-}
-
-func (h TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	task := models.CreateTask(h.Payload.TaskName, h.Payload.Payload, time.Duration(h.Payload.Delay)*time.Second)
-
-	fmt.Println("Received", task.Name, "with delay", task.Delay)
-
-	h.Pool[h.Payload.QueueName].Tasks <- *task
-
-	w.WriteHeader(http.StatusCreated)
+	return queues
 }

@@ -19,6 +19,11 @@ type ServiceResponse struct {
 	Message string `json:"message"`
 }
 
+func (p *Payload) QMap(queueName string) map[string]bool {
+	p.QMapper[queueName] = true
+	return p.QMapper
+}
+
 func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -33,7 +38,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(400)
 		w.Write(responseJson)
 
-		return errors.New("")
+		return errors.New(response.Message)
 	}
 
 	// check if there is a QueueName request
@@ -45,7 +50,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(400)
 		w.Write(responseJson)
 
-		return errors.New("")
+		return errors.New(response.Message)
 	}
 
 	// check if there is a Payload request
@@ -57,7 +62,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(400)
 		w.Write(responseJson)
 
-		return errors.New("")
+		return errors.New(response.Message)
 	}
 
 	// check if delay is between 0 to 30 minutes
@@ -70,7 +75,7 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(400)
 		w.Write(responseJson)
 
-		return errors.New("")
+		return errors.New(response.Message)
 	}
 
 	// check if payload attribute is a json field
@@ -82,9 +87,10 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(400)
 		w.Write(responseJson)
 
-		return errors.New("")
+		return errors.New(response.Message)
 	}
 
+	// check if requested queue name is available
 	if !p.QMapper[p.QueueName] {
 		response.Error = true
 		response.Message = "Queue " + p.QueueName + " not found"
@@ -93,12 +99,13 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(404)
 		w.Write(responseJson)
 
-		return errors.New("")
+		return errors.New(response.Message)
 	}
 
 	return nil
 }
 
+// inBetween checks if a given number is between two others
 func inBetween(number, min, max int) bool {
 
 	if (number >= min) && (number <= max) {
@@ -108,6 +115,7 @@ func inBetween(number, min, max int) bool {
 	return false
 }
 
+// isJSON checks if a given string is a proper JSON object
 func isJSON(str json.RawMessage) bool {
 	var js json.RawMessage
 
