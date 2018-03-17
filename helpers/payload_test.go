@@ -102,6 +102,7 @@ func TestPayload_Validate_QueueExists(t *testing.T) {
 
 	jsonData := []byte(`{"somekey": "somevalue"}`)
 	availableQueue := "email_queue"
+	expected := "Queue " + availableQueue + " not found"
 
 	payload := &Payload{
 		QueueName: "email_queue",
@@ -109,8 +110,6 @@ func TestPayload_Validate_QueueExists(t *testing.T) {
 		Payload:   (json.RawMessage)(jsonData),
 		Delay:     10,
 	}
-
-	expected := "Queue " + availableQueue + " not found"
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		payload.Validate(w, r)
