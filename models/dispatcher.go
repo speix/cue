@@ -68,15 +68,15 @@ func (d *Dispatcher) Listen() {
 	go func() {
 		for result := range results {
 
-			fmt.Println("Finished", result.task.Name)
-			fmt.Println(result.message)
-
 			if result.Error != nil {
 
 				endpointRetries := result.worker.queue.Endpoint.Retries
 				taskRetries := result.task.Retries
 
 				if endpointRetries != 0 && endpointRetries != taskRetries { // Retry working the task
+
+					fmt.Println("Finished", result.task.Name)
+					fmt.Println(result.message)
 
 					result.task.Delay = retryDelay // Set up retry delay
 

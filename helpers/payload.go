@@ -9,7 +9,7 @@ import (
 type Payload struct {
 	QueueName string          `json:"queue"`
 	TaskName  string          `json:"task"`
-	Payload   json.RawMessage `json:"payload"`
+	Messages  json.RawMessage `json:"messages"`
 	Delay     int             `json:"delay"`
 	QMapper   map[string]bool
 }
@@ -54,9 +54,9 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// check if there is a Payload request
-	if len(p.Payload) == 0 {
+	if len(p.Messages) == 0 {
 		response.Error = true
-		response.Message = "Payload is not set"
+		response.Message = "Messages is not set"
 		responseJson, _ := json.Marshal(response)
 
 		w.WriteHeader(400)
@@ -79,9 +79,9 @@ func (p *Payload) Validate(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// check if payload attribute is a json field
-	if !isJSON(p.Payload) {
+	if !isJSON(p.Messages) {
 		response.Error = true
-		response.Message = "Payload format is not json"
+		response.Message = "Message format is not json"
 		responseJson, _ := json.Marshal(response)
 
 		w.WriteHeader(400)
