@@ -78,14 +78,14 @@ func loadQueues() []*models.Queue {
 
 	db, err := models.NewDB(dataSource)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err.Error())
 	}
 
 	env := &Env{db}
 
 	queues, err := env.db.CreateQueues()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Error())
 	}
 
 	return queues
