@@ -1,0 +1,12 @@
+cue:
+    container_name: cue
+    image: supergramm/cue:1.0
+    restart: always
+    environment:
+      - CUE_DB_HOST=
+      - CUE_DB_NAME=
+      - CUE_DB_USER=
+      - CUE_DB_PASS=
+      - CUE_SERVER_PORT=
+    ports:
+      - ":"
