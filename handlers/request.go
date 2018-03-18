@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -50,7 +51,18 @@ func StartCue() *TaskRequestHandler {
 
 func (h *TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	task := models.CreateTask(h.Payload.TaskName, h.Payload.Payload, time.Duration(h.Payload.Delay)*time.Second)
+	task, err := models.CreateTask(h.Payload.TaskName, h.Payload.Messages, time.Duration(h.Payload.Delay)*time.Second)
+	if err != nil {
+		response := helpers.ServiceResponse{
+			Error:   true,
+			Message: err.Error(),
+		}
+		responseJson, _ := json.Marshal(response)
+
+		w.WriteHeader(400)
+		w.Write(responseJson)
+		return
+	}
 
 	fmt.Println("Received", task.Name, "with delay", task.Delay)
 

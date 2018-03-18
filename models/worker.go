@@ -51,57 +51,7 @@ func (w Worker) Start() {
 
 				time.Sleep(task.Delay)
 
-				result := Result{task: &task, worker: &w}
-
-				client := &http.Client{
-					Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Second),
-					Transport: &http.Transport{
-						TLSClientConfig: &tls.Config{
-							InsecureSkipVerify: true,
-						},
-					},
-				}
-
-				request, err := http.NewRequest(w.queue.Endpoint.Method, w.queue.Endpoint.Url, task.Payload)
-				if err != nil {
-					result.Error = err
-					result.message = "Failed to prepare request: " + err.Error()
-					results <- result
-					break
-				}
-
-				for h := range w.queue.Endpoint.Headers {
-					request.Header.Add(w.queue.Endpoint.Headers[h].Key, w.queue.Endpoint.Headers[h].Value)
-				}
-
-				response, err := client.Do(request)
-				if err != nil {
-					result.Error = err
-					result.message = "Failed to execute request: " + err.Error()
-					results <- result
-					break
-				}
-
-				if response.StatusCode != 200 {
-
-					body := &responseBody{}
-
-					err = json.NewDecoder(response.Body).Decode(&body)
-					if err != nil {
-						result.Error = err
-						result.message = "Response error: " + response.Status + " " + body.Message
-						results <- result
-						break
-					}
-
-					result.Error = errors.New("")
-					result.message = "Unable to connect: " + response.Status
-					results <- result
-					break
-				}
-
-				result.message = "Finished processing: " + task.Name + " response " + response.Status
-				results <- result
+				results <- w.execute(&task)
 
 			case <-w.quit:
 				fmt.Println("quitting the channel")
@@ -111,6 +61,67 @@ func (w Worker) Start() {
 
 		}
 	}()
+}
+
+// execute forwards each Message of the Task to the Endpoint Url
+func (w Worker) execute(task *Task) Result {
+
+	result := Result{task: task, worker: &w}
+
+	client := &http.Client{
+		Timeout: time.Duration(w.queue.Endpoint.Timeout * time.Second),
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	for i := range task.Messages {
+
+		request, err := http.NewRequest(w.queue.Endpoint.Method, w.queue.Endpoint.Url, task.Messages[i])
+		if err != nil {
+			result.Error = err
+			result.message = "Failed to prepare request: " + err.Error()
+			request.Body.Close()
+			return result
+		}
+
+		for h := range w.queue.Endpoint.Headers {
+			request.Header.Add(w.queue.Endpoint.Headers[h].Key, w.queue.Endpoint.Headers[h].Value)
+		}
+
+		response, err := client.Do(request)
+		if err != nil {
+			result.Error = err
+			result.message = "Failed to execute request: " + err.Error()
+			response.Body.Close()
+			return result
+		}
+
+		if response.StatusCode != 200 {
+
+			body := &responseBody{}
+
+			err = json.NewDecoder(response.Body).Decode(&body)
+			if err != nil {
+				result.Error = err
+				result.message = "Response error: " + response.Status + " " + body.Message
+				response.Body.Close()
+				return result
+			}
+
+			result.Error = errors.New("")
+			result.message = "Unable to connect: " + response.Status
+			response.Body.Close()
+			return result
+		}
+
+		result.message = "Finished processing: " + task.Name + " response " + response.Status
+		response.Body.Close()
+	}
+
+	return result
 }
 
 // Stop signals the worker to stop listening for work requests

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,7 +21,7 @@ func TestTaskRequestHandler_ServeHTTP(t *testing.T) {
 		Payload: &helpers.Payload{
 			QueueName: "myQueue",
 			TaskName:  "myTask",
-			Payload:   json.RawMessage{},
+			Messages:  []byte(`[{"somekey": "somevalue"}]`),
 			Delay:     10,
 		},
 		Pool: models.QueuesPool{},

@@ -42,7 +42,7 @@ func TestPayload_Validate_QueueIsSet(t *testing.T) {
 
 	payload := &Payload{
 		TaskName: "task",
-		Payload:  json.RawMessage{},
+		Messages: json.RawMessage{},
 		Delay:    10,
 		QMapper:  make(map[string]bool),
 	}
@@ -66,14 +66,14 @@ func TestPayload_Validate_QueueIsSet(t *testing.T) {
 
 func TestPayload_Validate_PayloadIsSet(t *testing.T) {
 
-	expected := "Payload is not set"
+	expected := "Messages is not set"
 	responseContainer := &ServiceResponse{}
 	b, _ := json.Marshal(PseudoRequestBody{"Test"})
 
 	payload := &Payload{
 		QueueName: "queue",
 		TaskName:  "task",
-		Payload:   json.RawMessage{},
+		Messages:  json.RawMessage{},
 		Delay:     10,
 		QMapper:   make(map[string]bool),
 	}
@@ -100,14 +100,13 @@ func TestPayload_Validate_QueueExists(t *testing.T) {
 	responseContainer := &ServiceResponse{}
 	b, _ := json.Marshal(PseudoRequestBody{"Test"})
 
-	jsonData := []byte(`{"somekey": "somevalue"}`)
 	availableQueue := "email_queue"
 	expected := "Queue " + availableQueue + " not found"
 
 	payload := &Payload{
 		QueueName: "email_queue",
 		TaskName:  "task",
-		Payload:   (json.RawMessage)(jsonData),
+		Messages:  []byte(`{"somekey": "somevalue"}`),
 		Delay:     10,
 	}
 
