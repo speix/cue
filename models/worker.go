@@ -83,7 +83,6 @@ func (w Worker) execute(task *Task) Result {
 		if err != nil {
 			result.Error = err
 			result.message = "Failed to prepare request: " + err.Error()
-			request.Body.Close()
 			return result
 		}
 
@@ -95,7 +94,6 @@ func (w Worker) execute(task *Task) Result {
 		if err != nil {
 			result.Error = err
 			result.message = "Failed to execute request: " + err.Error()
-			response.Body.Close()
 			return result
 		}
 
@@ -107,13 +105,11 @@ func (w Worker) execute(task *Task) Result {
 			if err != nil {
 				result.Error = err
 				result.message = "Response error: " + response.Status + " " + body.Message
-				response.Body.Close()
 				return result
 			}
 
 			result.Error = errors.New("")
 			result.message = "Unable to connect: " + response.Status
-			response.Body.Close()
 			return result
 		}
 
