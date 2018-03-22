@@ -19,7 +19,7 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func validate(h http.Handler, filter RequestResponseFilter) http.Handler {
+func validate(h http.Handler, filter PayloadFilter) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
