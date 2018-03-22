@@ -4,27 +4,24 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/speix/cue/helpers"
-	"github.com/speix/cue/models"
 )
 
 func TestTaskRequestHandler_ServeHTTP(t *testing.T) {
 
 	expected := 201
-	queue := &models.Queue{
+	queue := &Queue{
 		Name:  "myQueue",
-		Tasks: make(chan models.Task, 100),
+		Tasks: make(chan Task, 100),
 	}
 
 	h := &TaskRequestHandler{
-		Payload: &helpers.Payload{
+		Payload: &Payload{
 			QueueName: "myQueue",
 			TaskName:  "myTask",
 			Messages:  []byte(`[{"somekey": "somevalue"}]`),
 			Delay:     10,
 		},
-		Pool: models.QueuesPool{},
+		Pool: QueuesPool{},
 	}
 
 	h.Pool.Add(queue)
