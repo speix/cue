@@ -1,4 +1,4 @@
-package handlers
+package main
 
 import (
 	"encoding/json"
@@ -7,19 +7,15 @@ import (
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/speix/cue/helpers"
-
-	"github.com/speix/cue/models"
 )
 
 type Env struct {
-	db models.Storage
+	db Storage
 }
 
 type TaskRequestHandler struct {
-	Payload *helpers.Payload
-	Pool    models.QueuesPool
+	Payload *Payload
+	Pool    QueuesPool
 }
 
 func StartCue() *TaskRequestHandler {
@@ -27,10 +23,10 @@ func StartCue() *TaskRequestHandler {
 	queues := loadQueues() // Load queues from database
 
 	handler := &TaskRequestHandler{
-		Payload: &helpers.Payload{
+		Payload: &Payload{
 			QMapper: make(map[string]bool),
 		},
-		Pool: models.QueuesPool{},
+		Pool: QueuesPool{},
 	}
 
 	for i := range queues {
@@ -39,7 +35,7 @@ func StartCue() *TaskRequestHandler {
 
 		handler.Payload.QMap(queues[i].Name) // Add available queue names to the Payload as reference
 
-		dispatcher := models.CreateDispatcher(queues[i].Workers) // Create a dispatcher for each queue
+		dispatcher := CreateDispatcher(queues[i].Workers) // Create a dispatcher for each queue
 
 		dispatcher.Start(queues[i]) // Start workers running on each queue
 
@@ -51,9 +47,9 @@ func StartCue() *TaskRequestHandler {
 
 func (h *TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	task, err := models.CreateTask(h.Payload.TaskName, h.Payload.Messages, time.Duration(h.Payload.Delay)*time.Second)
+	task, err := CreateTask(h.Payload.TaskName, h.Payload.Messages, time.Duration(h.Payload.Delay)*time.Second)
 	if err != nil {
-		response := helpers.ServiceResponse{
+		response := ServiceResponse{
 			Error:   true,
 			Message: err.Error(),
 		}
@@ -64,19 +60,19 @@ func (h *TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Received", task.Name, "with delay", task.Delay)
+	fmt.Printf("Received %v with delay %v\n", task.Name, task.Delay)
 
 	h.Pool[h.Payload.QueueName].Tasks <- *task
 
 	w.WriteHeader(http.StatusCreated)
 }
 
-func loadQueues() []*models.Queue {
+func loadQueues() []*Queue {
 
 	dataSource := fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("CUE_DB_HOST"), os.Getenv("CUE_DB_USER"), os.Getenv("CUE_DB_PASS"), os.Getenv("CUE_DB_NAME"))
 
-	db, err := models.NewDB(dataSource)
+	db, err := NewDB(dataSource)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	"fmt"
@@ -68,17 +68,16 @@ func (d *Dispatcher) Listen() {
 	go func() {
 		for result := range results {
 
+			fmt.Println(result.message)
+
 			if result.Error != nil {
 
 				endpointRetries := result.worker.queue.Endpoint.Retries
 				taskRetries := result.task.Retries
 
-				fmt.Println("Finished", result.task.Name)
-				fmt.Println(result.message)
-
 				if endpointRetries != 0 && endpointRetries != taskRetries { // Retry working the task
 
-					fmt.Println("Retrying task", result.task.Name)
+					fmt.Printf("Retrying %v with delay %v\n", result.task.Name, retryDelay)
 
 					result.task.Delay = retryDelay // Set up retry delay
 
@@ -86,6 +85,8 @@ func (d *Dispatcher) Listen() {
 
 					result.worker.queue.Tasks <- *result.task // Send the task back to the queue for pick up
 
+				} else {
+					fmt.Println("Discarding task:", result.task.Name)
 				}
 
 			}

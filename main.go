@@ -4,15 +4,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/speix/cue/helpers"
-
-	"github.com/speix/cue/handlers"
 )
 
 func main() {
 
-	cue := handlers.StartCue() // Start the Cue (Queues, Dispatchers, Workers, Listeners)
+	cue := StartCue() // Start the Cue (Queues, Dispatchers, Workers, Listeners)
 
 	server := &http.Server{
 		Addr: ":" + os.Getenv("CUE_SERVER_PORT"),
@@ -23,7 +19,7 @@ func main() {
 	log.Fatal(server.ListenAndServe())
 }
 
-func validate(h http.Handler, filter helpers.RequestResponseFilter) http.Handler {
+func validate(h http.Handler, filter RequestResponseFilter) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

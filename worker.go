@@ -1,4 +1,4 @@
-package models
+package main
 
 import (
 	"crypto/tls"
@@ -47,9 +47,9 @@ func (w Worker) Start() {
 			case task := <-w.WorkerChannel:
 
 				// received a work request, do some work
-				fmt.Println("Pulled", task.Name, "by worker", w.ID, "with delay", task.Delay)
-
 				time.Sleep(task.Delay)
+
+				fmt.Printf("Running %v by worker %v\n", task.Name, w.ID)
 
 				results <- w.execute(&task)
 
@@ -113,7 +113,7 @@ func (w Worker) execute(task *Task) Result {
 			return result
 		}
 
-		result.message = "Finished processing: " + task.Name + " response " + response.Status
+		result.message = "Finished: " + task.Name + " response " + response.Status
 		response.Body.Close()
 	}
 
