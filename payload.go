@@ -6,14 +6,6 @@ import (
 	"net/http"
 )
 
-var (
-	ErrQueueNotSet    = errors.New("queue is not set")
-	ErrMessagesNotSet = errors.New("messages are not set")
-	ErrInvalidDelay   = errors.New("delay must be in seconds between 0 and 1800")
-	ErrInvalidJson    = errors.New("message format is not json")
-	ErrQueueNotFound  = errors.New("queue not found")
-)
-
 type Payload struct {
 	QueueName string          `json:"queue"`
 	TaskName  string          `json:"task"`
