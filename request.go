@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"time"
+
+	"github.com/speix/cue/app"
 )
 
 type Env struct {
@@ -14,7 +14,7 @@ type Env struct {
 }
 
 type TaskRequestHandler struct {
-	Payload *Payload
+	Payload *app.Payload
 	Pool    QueuesPool
 }
 
@@ -23,7 +23,7 @@ func StartCue() *TaskRequestHandler {
 	queues := loadQueues() // Load queues from database
 
 	handler := &TaskRequestHandler{
-		Payload: &Payload{
+		Payload: &app.Payload{
 			QMapper: make(map[string]bool),
 		},
 		Pool: QueuesPool{},
@@ -33,7 +33,7 @@ func StartCue() *TaskRequestHandler {
 
 		handler.Pool.Add(queues[i]) // Add queue to the pool of queues
 
-		handler.Payload.QMap(queues[i].Name) // Add available queue names to the Payload as reference
+		//handler.Payload.QMap(queues[i].Name) // Add available queue names to the Payload as reference
 
 		dispatcher := CreateDispatcher(queues[i].Workers) // Create a dispatcher for each queue
 
@@ -47,7 +47,7 @@ func StartCue() *TaskRequestHandler {
 
 func (h *TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	task, err := CreateTask(h.Payload.TaskName, h.Payload.Messages, time.Duration(h.Payload.Delay)*time.Second)
+	/*task, err := CreateTask(h.Payload.TaskName, h.Payload.Messages, time.Duration(h.Payload.Delay)*time.Second)
 	if err != nil {
 		response := ServiceResponse{
 			Error:   true,
@@ -64,7 +64,7 @@ func (h *TaskRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.Pool[h.Payload.QueueName].Tasks <- *task
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusCreated)*/
 }
 
 func loadQueues() []*Queue {
